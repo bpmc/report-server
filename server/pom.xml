@@ -21,7 +21,7 @@
     <dependency>
       <groupId>org.jboss.bpm</groupId>
       <artifactId>report-core</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.resteasy</groupId>

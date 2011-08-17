@@ -22,7 +22,7 @@
     <dependency>
       <groupId>org.jboss.bpm</groupId>
       <artifactId>report-shared</artifactId>
-      <version>${version}</version>
+      <version>${project.version}</version>
     </dependency>
     <!-- Other -->
     <dependency>
