@@ -73,7 +73,7 @@ public class ReportFacade
     catch (BirtInitException e)
     {
       initAttempt = true; // RIFTSAW-111: gracefully exit when BIRT not installed
-      log.warn("Failed to initialize BIRT service. Please check the DEBUG log for further details.");
+      log.info("BIRT service has not been activated. Please check the DEBUG log for further details.");
       log.debug("Initialization failed", e);
     }
   }
