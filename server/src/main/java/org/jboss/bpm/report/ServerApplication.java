@@ -21,7 +21,10 @@
  */
 package org.jboss.bpm.report;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,9 +37,9 @@ public class ServerApplication extends Application
 {
    HashSet<Object> singletons = new HashSet<Object>();
 
-   public ServerApplication()
+   public ServerApplication(@Context ServletContext servletContext)
    {            
-      singletons.add(new ReportFacade());
+      singletons.add(new ReportFacade(servletContext));
    }
 
    @Override

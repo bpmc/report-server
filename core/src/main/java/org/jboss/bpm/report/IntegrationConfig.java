@@ -28,20 +28,9 @@ package org.jboss.bpm.report;
  */
 public class IntegrationConfig
 {
-   private String birtHome = null;
    private String reportDir = null;   
    private String outputDir = null;
    private String imageBaseUrl = null;
-
-   public String getBirtHome()
-   {
-      return birtHome;
-   }
-
-   public void setBirtHome(String birtHome)
-   {
-      this.birtHome = birtHome;
-   }
 
    public String getReportDir()
    {

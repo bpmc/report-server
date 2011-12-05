@@ -36,6 +36,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.ServletContext;
+
 /**
  * Core BIRT service component. Requires to step through the lifecycle
  * before it can be used:
@@ -59,14 +61,14 @@ public class BirtService
 
   private enum State  {NONE, CREATED, STARTED, STOPPED, DESTROYED};
   private State currentState = State.NONE;
-
   private Map<String, IReportRunnable> cache = new ConcurrentHashMap<String, IReportRunnable>();
-
   private Map<String, ReportReference> reports = new ConcurrentHashMap<String, ReportReference>();
-
-  public BirtService(IntegrationConfig iConfig)
+  private ServletContext servletContext;
+  
+  public BirtService(IntegrationConfig iConfig, ServletContext servletContext)
   {
     this.iConfig = iConfig;
+    this.servletContext = servletContext;
   }
 
   /* blocking call*/
@@ -78,12 +80,7 @@ public class BirtService
     synchronized(reports)
     {
       this.engine = BirtEngineFactory.newInstance(iConfig);
-
       // parse template config
-      File workDir = new File(iConfig.getReportDir());
-      if(!workDir.exists())
-        throw new IllegalStateException("Working directory "+iConfig.getReportDir()+" cannot be found!");
-
       try
       {
         loadReports();
@@ -94,14 +91,14 @@ public class BirtService
         throw new RuntimeException("Failed to load reports", e);
       }
 
-      log.info("Service created: " +this.engine);
+      log.info("Service created: " + this.engine);
       currentState = State.CREATED;
     }
   }
 
   private void loadReports()
   {
-    File workDir = new File(iConfig.getReportDir());
+    File workDir = new File(servletContext.getRealPath("/WEB-INF" + iConfig.getReportDir()));
     assert workDir.isDirectory();
 
     File[] reportFiles = workDir.listFiles(
@@ -166,7 +163,6 @@ public class BirtService
         else
         {
           IScalarParameterDefn scalar = (IScalarParameterDefn) param;
-          //System.out.println(param.getName());
           //get details on the parameter
           paramDetails.put( scalar.getName(), BirtUtil.loadParameterDetails( task, scalar, template, null));
         }
@@ -272,8 +268,7 @@ public class BirtService
       //Set parent classloader for engine
       task.getAppContext().put(EngineConstants.APPCONTEXT_CLASSLOADER_KEY, metaData.getClassloader());
       task.setParameterValues(unmarshalParameters(metaData));
-      task.run(iConfig.getOutputDir()+outputFileName);
-
+      task.run(servletContext.getRealPath("/WEB-INF" + iConfig.getOutputDir()) + "/" + outputFileName);
     }
     catch (EngineException e)
     {
@@ -356,7 +351,7 @@ public class BirtService
     {
       //Open a (cached) report design
       IReportDocument document = engine.openReportDocument(
-          iConfig.getOutputDir()+metaData.getReportName()+".rptdocument"
+    		  servletContext.getRealPath("/WEB-INF" + iConfig.getOutputDir()) + "/" + metaData.getReportName() + ".rptdocument"
       );
 
       //Create renderTask to run and renderTask the report,
@@ -380,7 +375,7 @@ public class BirtService
           outputFileName = extactReportName(metaData.getReportName())+".pdf";
           break;
       }
-      options.setOutputFileName(iConfig.getOutputDir() + outputFileName);
+      options.setOutputFileName(servletContext.getRealPath("/WEB-INF" + iConfig.getOutputDir()) + "/" + outputFileName);
 
       // ------------------
 
@@ -430,9 +425,7 @@ public class BirtService
     IReportRunnable design = cache.get(reportName);
     if(null==design)
     {
-      design = engine.openReportDesign(
-          iConfig.getReportDir()+reportName
-      );
+      design = engine.openReportDesign( servletContext.getResourceAsStream("/WEB-INF" + iConfig.getReportDir() + "/" + reportName) );
       cache.put(reportName, design);
     }
     return design;

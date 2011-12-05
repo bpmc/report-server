@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.bpm.report.model.ReportReference;
 
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -41,19 +42,6 @@ import java.util.StringTokenizer;
 /**
  * BIRT integration facade.<p>
  *
- * Uses the server data directory (i.e. <code>$JBOSS_HOME/server/default/data/birt</code>)
- * as it's work directory (referred to as $WORK_DIR in the subsequent sections):
- *
- * <ul>
- *    <li>report template location: $WORK_DIR/
- *    <li>output directory: $WORK_DIR/output
- * </ul>
- *
- * NOTE: It requires a BIRT report engine to be installed in the work directory:
- * (<code>$WORK_DIR/ReportEngine</code>.
- *
- * @see org.jboss.bpm.report.JMXServerConfig
- *
  * @author Heiko.Braun <heiko.braun@jboss.com>
  */
 @Path("report")
@@ -64,11 +52,13 @@ public class ReportFacade
   private boolean isInitialized;
   private boolean initAttempt;
 
-  public ReportFacade()
+  public ReportFacade() {}
+  
+  public ReportFacade(ServletContext servletContext)
   {
     try
     {
-      if(!initAttempt) initBirtService();
+      if(!initAttempt) initBirtService(servletContext);
     }
     catch (BirtInitException e)
     {
@@ -78,40 +68,19 @@ public class ReportFacade
     }
   }
 
-  public void initBirtService()
+  public void initBirtService(ServletContext servletContext)
       throws BirtInitException
   {
     if(!isInitialized)
     {
-      File serverDataDir = resolveBirtDataDir();
-
       IntegrationConfig iConfig = new IntegrationConfig();      
-      String absServerDataDir = serverDataDir.getAbsolutePath();
-
-      String birtDataDir = absServerDataDir;
-      String defaultBirtHome = birtDataDir + "/ReportEngine";
-      String birtOutputDir = birtDataDir + "/output";
-
-      File birtOutput = new File(birtOutputDir);
-      birtOutput.mkdirs(); // will create parent directoy as well
-
-      // check dependency on ReportEngine
-      if(! new File(defaultBirtHome).exists())
-        throw new BirtInitException("The BIRT report engine doesn't seem to be installed:" +defaultBirtHome);
-
-      // --
-
-      iConfig.setBirtHome(defaultBirtHome);
-      iConfig.setOutputDir( birtOutputDir );
-      iConfig.setReportDir( birtDataDir );
-
-      log.info("BIRT home: " +iConfig.getBirtHome());
+      iConfig.setOutputDir( "/output" );
+      iConfig.setReportDir( "/reports" );
       log.info("Output dir: " +iConfig.getOutputDir());
       log.info("Report dir: " +iConfig.getReportDir());
-
       try
       {
-        this.birtService = new BirtService(iConfig);
+        this.birtService = new BirtService(iConfig, servletContext);
         this.birtService.createAsync();
       }
       catch (Throwable t)
@@ -123,51 +92,14 @@ public class ReportFacade
     }
   }
 
-  private File resolveBirtDataDir()
-  {
-    JMXServerConfig jmxConfig = null;
-    File serverDataDir = null;
-    
-    // first verify if custom location of BIRT is given
-    if (System.getProperty("org.jbpm.report.engine.dir") != null) {
-      if (log.isDebugEnabled()) {
-        log.debug("Checks custom location defined with JVM parameter '-Dorg.jbpm.report.engine.dir' = " + System.getProperty("org.jbpm.report.engine.dir"));
-      }
-      serverDataDir = new File(System.getProperty("org.jbpm.report.engine.dir"));
-      
-      // file must exist
-      if (serverDataDir != null && serverDataDir.exists()){
-        return serverDataDir;
-      }
-    }
-    
-    try
-    {
-      // next rely on JBoss specific settings
-      jmxConfig = new JMXServerConfig();
-      serverDataDir = new File(jmxConfig.getServerDataDir(), "birt");
-    }
-    catch (Exception e)
-    {
-      // last rely on Tomcat settings
-      // fallback on on CATALINA_HOME or blow up
-      log.warn("Resolving serverDataDir based on -Dcatalina.home");
-      if(System.getProperty("catalina.home")!=null)
-        serverDataDir = new File(System.getProperty("catalina.home") + "/birt");
-      else
-        throw new IllegalStateException("Neither JMX config nor '-Dcatalina.home' nor '-Dorg.jbpm.report.engine.dir' available to resolve serverDataDir");
-    }
-
-    return serverDataDir;
-  }
-
   @GET
   @Path("render/{fileName}")
   @Produces("text/html")
   public Response viewReportHtml(
       @PathParam("fileName")
       String fileName,
-      @Context HttpServletRequest request
+      @Context HttpServletRequest request,
+      @Context ServletContext servletContext
   )
   {
     assertBirtAvailability();
@@ -177,10 +109,7 @@ public class ReportFacade
       RenderMetaData renderMeta = defaultRenderMetaData(fileName, request);
 
       String outputFileName = birtService.view(renderMeta);
-      String absoluteFile = birtService.getIntegrationConfig().getOutputDir() + outputFileName;
-      log.debug("View " + absoluteFile);
-
-      File reportFile = new File(absoluteFile);
+      File reportFile = new File( servletContext.getRealPath("/WEB-INF" + birtService.getIntegrationConfig().getOutputDir()) + "/" + outputFileName);
       return Response.ok(reportFile).type("text/html").build();
     }
     catch(Throwable e1)
@@ -202,7 +131,8 @@ public class ReportFacade
   public Response renderReportHtml(
       @PathParam("fileName")
       String fileName,
-      @Context HttpServletRequest request
+      @Context HttpServletRequest request,
+      @Context ServletContext servletContext
   )
   {
 
@@ -215,7 +145,7 @@ public class ReportFacade
       renderMeta.getParameters().putAll(postParams);
 
       String outputFileName = birtService.render(renderMeta);
-      String absoluteFile = birtService.getIntegrationConfig().getOutputDir() + outputFileName;
+      String absoluteFile = servletContext.getRealPath("/WEB-INF" + birtService.getIntegrationConfig().getOutputDir()) + "/" + outputFileName;
       log.debug("Render " + absoluteFile);
 
       return Response.ok().type("text/html").build();
@@ -231,8 +161,8 @@ public class ReportFacade
   public Response getImage(
       @PathParam("fileName")
       String fileName,
-      @Context HttpServletRequest
-          request
+      @Context HttpServletRequest request,
+      @Context ServletContext servletContext
   )
   {
     assertBirtAvailability();
@@ -323,7 +253,7 @@ public class ReportFacade
   @GET
   @Path("config")
   @Produces("application/json")
-  public Response getReportConfig()
+  public Response getReportConfig(@Context ServletContext servletContext)
   {
     assertBirtAvailability();
 

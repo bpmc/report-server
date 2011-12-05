@@ -156,6 +156,10 @@
             <url>http://repository.jboss.org/maven2</url>
         </repository>
         <repository>
+			<id>thirdparty.jboss.uploads</id>
+			<url>https://repository.jboss.org/nexus/content/repositories/thirdparty-uploads/</url>        
+        </repository>
+        <repository>
             <id>snapshots.jboss.org</id>
             <name>JBoss Snapshot Repository</name>
             <url>http://snapshots.jboss.org/maven2</url>
@@ -168,19 +172,16 @@
         </repository>
     </repositories>
 
-<distributionManagement>
-<repository>
-      <id>jboss-releases-repository</id>
-      <name>JBoss Releases Repository</name>
-      <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
-    </repository>
-
- <snapshotRepository>
-      <id>jboss-snapshots-repository</id>
-      <name>JBoss Snapshots Repository</name>
-      <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
-    </snapshotRepository>
-    
-</distributionManagement>
-
+    <distributionManagement>
+    	<repository>
+      		<id>jboss-releases-repository</id>
+      		<name>JBoss Releases Repository</name>
+      		<url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
+    	</repository>
+     	<snapshotRepository>
+      		<id>jboss-snapshots-repository</id>
+      		<name>JBoss Snapshots Repository</name>
+      		<url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+     	</snapshotRepository>
+     </distributionManagement>
 </project>

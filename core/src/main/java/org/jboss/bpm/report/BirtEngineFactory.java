@@ -39,8 +39,6 @@ public class BirtEngineFactory
       try
       {
          EngineConfig config = new EngineConfig( );
-         config.setBIRTHome(iConfig.getBirtHome());
-
          Platform.startup( config );
          IReportEngineFactory factory = (IReportEngineFactory) Platform
                .createFactoryObject( IReportEngineFactory.EXTENSION_REPORT_ENGINE_FACTORY );
