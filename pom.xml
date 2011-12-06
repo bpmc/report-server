@@ -7,11 +7,10 @@
     <packaging>pom</packaging>
 
     <!-- Parent -->
-
-    <scm>
-        <connection>scm:svn:https://svn.jboss.org/repos/soag/report-server/trunk</connection>
-        <developerConnection>scm:svn:https://svn.jboss.org/repos/soag/report-server/trunk</developerConnection>
-        <url>https://svn.jboss.org/repos/soag/report-server/trunk</url>
+     <scm>
+        <connection>scm:git:git@github.com:bpmc/report-server.git</connection>
+        <developerConnection>scm:git:git@github.com:bpmc/report-server.git</developerConnection>
+        <url>https://github.com/bpmc/report-server</url>
     </scm>
     
     <properties>
