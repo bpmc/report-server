@@ -296,7 +296,6 @@ public class BirtService
           throw new IllegalArgumentException("No such param "+paramName);
 
         String paramValue = metaData.getParameters().get(paramName);
-
         switch(reportParam.getDataType())
         {
           case DATETIME:
@@ -310,6 +309,9 @@ public class BirtService
           case BOOLEAN:
             results.put(paramName, Boolean.valueOf(paramValue));
             break;
+          case STRING:
+        	 results.put(paramName, "\"" + String.valueOf(paramValue) + "\"");
+        	 break;
           default:
             results.put(paramName, paramValue);
         }
