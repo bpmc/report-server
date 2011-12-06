@@ -3,7 +3,7 @@
     <name>JBoss BPM - Reporting (BIRT Integration)</name>
     <groupId>org.jboss.bpm</groupId>
     <artifactId>report-parent</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <!-- Parent -->
