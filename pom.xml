@@ -5,8 +5,24 @@
     <artifactId>report-parent</artifactId>
     <version>1.4.1-SNAPSHOT</version>
     <packaging>pom</packaging>
+	
+	<description>Reporting</description>
+  	<url>https://github.com/bpmc/report-server</url>
+  	<developers>
+    	<developer>
+      	<id>tsurdilo</id>
+      	<name>Tihomir Surdilovic</name>
+      	<email>tsurdilo@redhat.com</email>
+    	</developer>
+  	</developers>
+  	<licenses>
+    	<license>
+      		<name>The Apache Software License, Version 2.0</name>
+      		<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      		<distribution>repo</distribution>
+    	</license>
+  	</licenses>
 
-    <!-- Parent -->
      <scm>
         <connection>scm:git:git@github.com:bpmc/report-server.git</connection>
         <developerConnection>scm:git:git@github.com:bpmc/report-server.git</developerConnection>
