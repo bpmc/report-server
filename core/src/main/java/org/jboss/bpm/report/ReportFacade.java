@@ -108,7 +108,7 @@ public class ReportFacade
     {
       RenderMetaData renderMeta = defaultRenderMetaData(fileName, request);
 
-      String outputFileName = birtService.view(renderMeta);
+      String outputFileName = birtService.view(renderMeta, servletContext, request);
       File reportFile = new File( servletContext.getRealPath("/WEB-INF" + birtService.getIntegrationConfig().getOutputDir()) + "/" + outputFileName);
       return Response.ok(reportFile).type("text/html").build();
     }
@@ -166,12 +166,12 @@ public class ReportFacade
   )
   {
     assertBirtAvailability();
-
-    String imageDir = birtService.getIntegrationConfig().getImageDirectory();
-    String absName = imageDir + fileName;
+    String imageDir = servletContext.getRealPath("/WEB-INF" + birtService.getIntegrationConfig().getImageDirectory() + "/");
+    String absName = imageDir + "/" + fileName;
     File imageFile = new File(absName);
-    if(!imageFile.exists())
-      throw new IllegalArgumentException("Image " +absName+" doesn't exist");
+    if(!imageFile.exists()) {
+    	throw new IllegalArgumentException("Image " +absName+" doesn't exist");
+    }
     return Response.ok(imageFile).build();
   }
 
