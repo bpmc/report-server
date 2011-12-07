@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Core BIRT service component. Requires to step through the lifecycle
@@ -326,7 +327,7 @@ public class BirtService
 
   /**
    * Render a report based on render meta data.
-   * this routin simply return the output filename.
+   * this routine simply return the output filename.
    * in order to get to an absolute path you need to prepend the service output directory:<p>
    * <code>
    *  BirtService.getIntegrationConfig().getOutputDir() + outputFileName;
@@ -335,7 +336,7 @@ public class BirtService
    * @param metaData render instruction like the template name
    * @return output filename
    */
-  public String view(RenderMetaData metaData)
+  public String view(RenderMetaData metaData, ServletContext servletContext, HttpServletRequest request)
   {
     if( (currentState==State.CREATED || currentState==State.STARTED) == false)
       throw new IllegalStateException("Cannot renderTask in state " + currentState);
@@ -385,7 +386,7 @@ public class BirtService
       {
         HTMLRenderOption htmlOptions = new HTMLRenderOption( options);
         htmlOptions.setImageHandler(new HTMLServerImageHandler());
-        htmlOptions.setImageDirectory(iConfig.getImageDirectory());
+        htmlOptions.setImageDirectory(servletContext.getRealPath("/WEB-INF" + iConfig.getImageDirectory()));
         htmlOptions.setBaseImageURL(metaData.getImageBaseUrl());
         htmlOptions.setHtmlPagination(false);
         htmlOptions.setHtmlRtLFlag(false);
