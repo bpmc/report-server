@@ -269,6 +269,10 @@ public class BirtService
       //Set parent classloader for engine
       task.getAppContext().put(EngineConstants.APPCONTEXT_CLASSLOADER_KEY, metaData.getClassloader());
       task.setParameterValues(unmarshalParameters(metaData));
+      boolean validParams = task.validateParameters();
+      if(!validParams) {
+    	  log.error("Invalid report parameters " + task.getErrors());
+      }
       task.run(servletContext.getRealPath("/WEB-INF" + iConfig.getOutputDir()) + "/" + outputFileName);
     }
     catch (EngineException e)
@@ -311,7 +315,7 @@ public class BirtService
             results.put(paramName, Boolean.valueOf(paramValue));
             break;
           case STRING:
-        	 results.put(paramName, "\"" + String.valueOf(paramValue) + "\"");
+        	 results.put(paramName, String.valueOf(paramValue));
         	 break;
           default:
             results.put(paramName, paramValue);
@@ -390,6 +394,8 @@ public class BirtService
         htmlOptions.setBaseImageURL(metaData.getImageBaseUrl());
         htmlOptions.setHtmlPagination(false);
         htmlOptions.setHtmlRtLFlag(false);
+        htmlOptions.setLayoutPreference(HTMLRenderOption.LAYOUT_PREFERENCE_AUTO);
+        htmlOptions.setSupportedImageFormats("PNG");
         //Setting this to true removes html and body tags
         htmlOptions.setEmbeddable(false);
         renderTask.setRenderOption(htmlOptions);
