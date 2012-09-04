@@ -30,6 +30,8 @@ import org.jboss.bpm.report.model.ReportReference;
 import org.jboss.bpm.report.util.BirtUtil;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -64,12 +66,10 @@ public class BirtService
   private State currentState = State.NONE;
   private Map<String, IReportRunnable> cache = new ConcurrentHashMap<String, IReportRunnable>();
   private Map<String, ReportReference> reports = new ConcurrentHashMap<String, ReportReference>();
-  private ServletContext servletContext;
   
   public BirtService(IntegrationConfig iConfig, ServletContext servletContext)
   {
     this.iConfig = iConfig;
-    this.servletContext = servletContext;
   }
 
   /* blocking call*/
@@ -99,7 +99,7 @@ public class BirtService
 
   private void loadReports()
   {
-    File workDir = new File(servletContext.getRealPath("/WEB-INF" + iConfig.getReportDir()));
+    File workDir = new File(iConfig.getReportDir());
     assert workDir.isDirectory();
 
     File[] reportFiles = workDir.listFiles(
@@ -273,7 +273,7 @@ public class BirtService
       if(!validParams) {
     	  log.error("Invalid report parameters " + task.getErrors());
       }
-      task.run(servletContext.getRealPath("/WEB-INF" + iConfig.getOutputDir()) + "/" + outputFileName);
+      task.run( iConfig.getOutputDir() + "/" + outputFileName);
     }
     catch (EngineException e)
     {
@@ -357,8 +357,7 @@ public class BirtService
     try
     {
       //Open a (cached) report design
-      IReportDocument document = engine.openReportDocument(
-    		  servletContext.getRealPath("/WEB-INF" + iConfig.getOutputDir()) + "/" + metaData.getReportName() + ".rptdocument"
+      IReportDocument document = engine.openReportDocument(iConfig.getOutputDir() + "/" + metaData.getReportName() + ".rptdocument"
       );
 
       //Create renderTask to run and renderTask the report,
@@ -382,7 +381,7 @@ public class BirtService
           outputFileName = extactReportName(metaData.getReportName())+".pdf";
           break;
       }
-      options.setOutputFileName(servletContext.getRealPath("/WEB-INF" + iConfig.getOutputDir()) + "/" + outputFileName);
+      options.setOutputFileName(iConfig.getOutputDir() + "/" + outputFileName);
 
       // ------------------
 
@@ -390,7 +389,7 @@ public class BirtService
       {
         HTMLRenderOption htmlOptions = new HTMLRenderOption( options);
         htmlOptions.setImageHandler(new HTMLServerImageHandler());
-        htmlOptions.setImageDirectory(servletContext.getRealPath("/WEB-INF" + iConfig.getImageDirectory()));
+        htmlOptions.setImageDirectory(iConfig.getImageDirectory());
         htmlOptions.setBaseImageURL(metaData.getImageBaseUrl());
         htmlOptions.setHtmlPagination(false);
         htmlOptions.setHtmlRtLFlag(false);
@@ -434,8 +433,15 @@ public class BirtService
     IReportRunnable design = cache.get(reportName);
     if(null==design)
     {
-      design = engine.openReportDesign( servletContext.getResourceAsStream("/WEB-INF" + iConfig.getReportDir() + "/" + reportName) );
-      cache.put(reportName, design);
+    	FileInputStream fi;
+		try {
+			fi = new FileInputStream(iConfig.getReportDir() + "/" + reportName);
+		
+		      design = engine.openReportDesign( fi );
+		      cache.put(reportName, design);
+		} catch (FileNotFoundException e) {
+			throw new EngineException("Error when reading report " + e.getMessage());
+		}
     }
     return design;
   }

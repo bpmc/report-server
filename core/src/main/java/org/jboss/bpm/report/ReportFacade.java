@@ -74,8 +74,8 @@ public class ReportFacade
     if(!isInitialized)
     {
       IntegrationConfig iConfig = new IntegrationConfig();      
-      iConfig.setOutputDir( "/output" );
-      iConfig.setReportDir( "/reports" );
+      iConfig.setOutputDir( servletContext.getRealPath("/WEB-INF") + "/output" );
+      iConfig.setReportDir( servletContext.getRealPath("/WEB-INF") + "/reports" );
       log.info("Output dir: " +iConfig.getOutputDir());
       log.info("Report dir: " +iConfig.getReportDir());
       try
@@ -109,7 +109,7 @@ public class ReportFacade
       RenderMetaData renderMeta = defaultRenderMetaData(fileName, request);
 
       String outputFileName = birtService.view(renderMeta, servletContext, request);
-      File reportFile = new File( servletContext.getRealPath("/WEB-INF" + birtService.getIntegrationConfig().getOutputDir()) + "/" + outputFileName);
+      File reportFile = new File( birtService.getIntegrationConfig().getOutputDir() + "/" + outputFileName);
       return Response.ok(reportFile).type("text/html").build();
     }
     catch(Throwable e1)
@@ -145,7 +145,7 @@ public class ReportFacade
       renderMeta.getParameters().putAll(postParams);
 
       String outputFileName = birtService.render(renderMeta);
-      String absoluteFile = servletContext.getRealPath("/WEB-INF" + birtService.getIntegrationConfig().getOutputDir()) + "/" + outputFileName;
+      String absoluteFile = birtService.getIntegrationConfig().getOutputDir() + "/" + outputFileName;
       log.debug("Render " + absoluteFile);
 
       return Response.ok().type("text/html").build();
@@ -166,7 +166,7 @@ public class ReportFacade
   )
   {
     assertBirtAvailability();
-    String imageDir = servletContext.getRealPath("/WEB-INF" + birtService.getIntegrationConfig().getImageDirectory() + "/");
+    String imageDir = birtService.getIntegrationConfig().getImageDirectory() + "/";
     String absName = imageDir + "/" + fileName;
     File imageFile = new File(absName);
     if(!imageFile.exists()) {
